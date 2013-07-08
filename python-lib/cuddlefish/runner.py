@@ -13,6 +13,7 @@ import re
 import shutil
 
 import mozrunner
+import mozprofile
 from cuddlefish.prefs import DEFAULT_COMMON_PREFS
 from cuddlefish.prefs import DEFAULT_FIREFOX_PREFS
 from cuddlefish.prefs import DEFAULT_THUNDERBIRD_PREFS
@@ -99,7 +100,7 @@ def check_output(*popenargs, **kwargs):
     return output
 
 
-class FennecProfile(mozrunner.Profile):
+class FennecProfile(mozprofile.Profile):
     preferences = {}
     names = ['fennec']
 
@@ -270,7 +271,7 @@ class RemoteFennecRunner(mozrunner.Runner):
         return names
 
 
-class XulrunnerAppProfile(mozrunner.Profile):
+class XulrunnerAppProfile(mozprofile.Profile):
     preferences = {}
     names = []
 
@@ -449,11 +450,11 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
         runner_class = XulrunnerAppRunner
         cmdargs.append(os.path.join(harness_root_dir, 'application.ini'))
     elif app_type == "firefox":
-        profile_class = mozrunner.FirefoxProfile
+        profile_class = mozprofile.FirefoxProfile
         preferences.update(DEFAULT_FIREFOX_PREFS)
         runner_class = mozrunner.FirefoxRunner
     elif app_type == "thunderbird":
-        profile_class = mozrunner.ThunderbirdProfile
+        profile_class = mozprofile.ThunderbirdProfile
         preferences.update(DEFAULT_THUNDERBIRD_PREFS)
         runner_class = mozrunner.ThunderbirdRunner
     else:

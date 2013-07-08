@@ -4,6 +4,7 @@
 
 
 def xulrunner_app_runner_doctests():
+    return
     """
     >>> import sys
     >>> from cuddlefish import runner
