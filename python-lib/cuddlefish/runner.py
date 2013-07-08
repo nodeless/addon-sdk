@@ -13,6 +13,7 @@ import re
 import shutil
 
 import mozrunner
+import mozprofile
 from cuddlefish.prefs import DEFAULT_COMMON_PREFS
 from cuddlefish.prefs import DEFAULT_FIREFOX_PREFS
 from cuddlefish.prefs import DEFAULT_THUNDERBIRD_PREFS
@@ -99,7 +100,18 @@ def check_output(*popenargs, **kwargs):
     return output
 
 
-class FennecProfile(mozrunner.Profile):
+class FirefoxProfileForJetpack(mozprofile.FirefoxProfile):
+    # focusmanager.testmode breaks test-panel.testPanelDoesNotShowInPrivateWindowNoAnchor,
+    # and other tests of private browsing functionality
+    del mozprofile.FirefoxProfile.preferences['focusmanager.testmode']
+
+    def __init__(self, addons=None, profile=None, preferences=None):
+        # Functionality enabled in bug 854937 isn't triggered if we install into
+        # the 'staged' dir. If use_staged_dir is True, test-self.js fails.
+        mozprofile.FirefoxProfile.__init__(self, addons=addons, profile=profile, preferences=preferences, use_staged_dir=False)
+
+
+class FennecProfile(mozprofile.Profile):
     preferences = {}
     names = ['fennec']
 
@@ -270,7 +282,7 @@ class RemoteFennecRunner(mozrunner.Runner):
         return names
 
 
-class XulrunnerAppProfile(mozrunner.Profile):
+class XulrunnerAppProfile(mozprofile.Profile):
     preferences = {}
     names = []
 
@@ -449,11 +461,11 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
         runner_class = XulrunnerAppRunner
         cmdargs.append(os.path.join(harness_root_dir, 'application.ini'))
     elif app_type == "firefox":
-        profile_class = mozrunner.FirefoxProfile
+        profile_class = FirefoxProfileForJetpack
         preferences.update(DEFAULT_FIREFOX_PREFS)
         runner_class = mozrunner.FirefoxRunner
     elif app_type == "thunderbird":
-        profile_class = mozrunner.ThunderbirdProfile
+        profile_class = mozprofile.ThunderbirdProfile
         preferences.update(DEFAULT_THUNDERBIRD_PREFS)
         runner_class = mozrunner.ThunderbirdRunner
     else:
@@ -498,7 +510,7 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
 
     env = {}
     env.update(os.environ)
-    env['MOZ_NO_REMOTE'] = '1'
+    env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
     env['XPCOM_DEBUG_BREAK'] = 'stack'
     env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
     env.update(extra_environment)
