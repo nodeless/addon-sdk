@@ -100,6 +100,17 @@ def check_output(*popenargs, **kwargs):
     return output
 
 
+class FirefoxProfileForJetpack(mozprofile.FirefoxProfile):
+    # focusmanager.testmode breaks test-panel.testPanelDoesNotShowInPrivateWindowNoAnchor,
+    # and other tests of private browsing functionality
+    del mozprofile.FirefoxProfile.preferences['focusmanager.testmode']
+
+    def __init__(self, addons=None, profile=None, preferences=None):
+        # Functionality enabled in bug 854937 isn't triggered if we install into
+        # the 'staged' dir. If use_staged_dir is True, test-self.js fails.
+        mozprofile.FirefoxProfile.__init__(self, addons=addons, profile=profile, preferences=preferences, use_staged_dir=False)
+
+
 class FennecProfile(mozprofile.Profile):
     preferences = {}
     names = ['fennec']
@@ -450,7 +461,7 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
         runner_class = XulrunnerAppRunner
         cmdargs.append(os.path.join(harness_root_dir, 'application.ini'))
     elif app_type == "firefox":
-        profile_class = mozprofile.FirefoxProfile
+        profile_class = FirefoxProfileForJetpack
         preferences.update(DEFAULT_FIREFOX_PREFS)
         runner_class = mozrunner.FirefoxRunner
     elif app_type == "thunderbird":
